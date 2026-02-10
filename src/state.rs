@@ -1,26 +1,66 @@
-use ggez::{event::EventHandler, *};
+use core::Chip8;
+use ggez::{
+    event::EventHandler,
+    graphics::{Color, DrawMode, Mesh},
+    *,
+};
+
+const SIZE: usize = 10;
+const SPACE: usize = 2;
+const FRAME_TIME: f32 = 1000.0 / 60.0;
 
 pub struct State {
-    duration: std::time::Duration,
-    chip8: core::Chip8,
+    chip8: Chip8,
+    elapsed_ms: f32,
+    is_first_frame: bool,
 }
 
 impl State {
     pub fn new(rom: &[u8]) -> Self {
         Self {
-            duration: std::time::Duration::new(0, 0),
-            chip8: core::Chip8::new(rom),
+            chip8: Chip8::new(rom),
+            elapsed_ms: 0.0,
+            is_first_frame: true,
         }
     }
 }
 
 impl EventHandler for State {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        self.duration = ctx.time.delta();
+        self.chip8.step(0);
+        if !self.is_first_frame {
+            self.elapsed_ms += ctx.time.delta().as_secs_f32() * 1000.0;
+            while self.elapsed_ms >= FRAME_TIME {
+                self.chip8.dec_delay_timer();
+                self.chip8.dec_sound_timer();
+                self.elapsed_ms -= FRAME_TIME;
+            }
+        } else {
+            self.is_first_frame = false;
+        }
         Ok(())
     }
 
-    fn draw(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        Ok(())
+    fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
+        let mut canvas = graphics::Canvas::from_frame(ctx, graphics::Color::BLACK);
+        let mut mb = graphics::MeshBuilder::new();
+        let display = self.chip8.get_display();
+        for (y, row) in display.iter().enumerate() {
+            for (x, &pixel) in row.iter().enumerate() {
+                if !pixel {
+                    continue;
+                }
+                let rect = graphics::Rect::new(
+                    (x * (SIZE + SPACE)) as f32,
+                    (y * (SIZE + SPACE)) as f32,
+                    SIZE as f32,
+                    SIZE as f32,
+                );
+                mb.rectangle(DrawMode::fill(), rect, Color::GREEN)?;
+            }
+        }
+        let mesh = Mesh::from_data(ctx, mb.build());
+        canvas.draw(&mesh, graphics::DrawParam::default());
+        canvas.finish(ctx)
     }
 }
