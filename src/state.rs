@@ -5,8 +5,8 @@ use ggez::{
     *,
 };
 
-const SIZE: usize = 10;
-const SPACE: usize = 2;
+pub const SIZE: usize = 14;
+pub const SPACE: usize = 2;
 const FRAME_TIME: f32 = 1000.0 / 60.0;
 
 pub struct State {
