@@ -53,17 +53,10 @@ impl State {
 
 impl EventHandler for State {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        let key = KEYCODES
-            .iter()
-            .enumerate()
-            .map(|(i, &kc)| {
-                if ctx.keyboard.is_key_pressed(kc) {
-                    1 << i
-                } else {
-                    0
-                }
-            })
-            .sum();
+        let key = KEYCODES.iter().enumerate().fold(0, |acc, (i, &kc)| {
+            let pressed = ctx.keyboard.is_key_pressed(kc);
+            acc | if pressed { 1 << i } else { 0 }
+        });
         self.chip8.step(key);
         if !self.is_first_frame {
             self.elapsed_ms += ctx.time.delta().as_secs_f32() * 1000.0;
