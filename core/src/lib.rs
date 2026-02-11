@@ -5,6 +5,9 @@ mod cpu;
 mod display;
 mod memory;
 
+pub const DISPLAY_WIDTH: usize = WIDTH;
+pub const DISPLAY_HEIGHT: usize = HEIGHT;
+
 pub struct Chip8 {
     pub cpu: Cpu,
     pub memory: Memory,
@@ -28,7 +31,7 @@ impl Chip8 {
         &self.memory.data
     }
 
-    pub fn get_display(&self) -> &[[bool; WIDTH]; HEIGHT] {
+    pub fn get_display(&self) -> &[[bool; DISPLAY_WIDTH]; DISPLAY_HEIGHT] {
         &self.display.data
     }
 
