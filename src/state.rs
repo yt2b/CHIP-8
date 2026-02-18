@@ -1,3 +1,4 @@
+use crate::freq_timer::FrequencyTimer;
 use core::Chip8;
 use ggez::{
     event::EventHandler,
@@ -8,7 +9,6 @@ use ggez::{
 
 pub const SIZE: usize = 14;
 pub const SPACE: usize = 2;
-const FRAME_TIME: f32 = 1000.0 / 60.0;
 // Key mapping
 // 1 2 3 C -> 1 2 3 4
 // 4 5 6 D -> Q W E R
@@ -35,18 +35,18 @@ const KEYCODES: [KeyCode; 16] = [
 
 pub struct State {
     chip8: Chip8,
-    elapsed_ms: f32,
     is_first_frame: bool,
     gray: Color,
+    timer_freq: FrequencyTimer,
 }
 
 impl State {
     pub fn new(rom: &[u8]) -> Self {
         Self {
             chip8: Chip8::new(rom),
-            elapsed_ms: 0.0,
             is_first_frame: true,
             gray: Color::from_rgb_u32(0x101010),
+            timer_freq: FrequencyTimer::new(60),
         }
     }
 }
@@ -57,13 +57,13 @@ impl EventHandler for State {
             let pressed = ctx.keyboard.is_key_pressed(kc);
             acc | if pressed { 1 << i } else { 0 }
         });
+
         self.chip8.step(key);
         if !self.is_first_frame {
-            self.elapsed_ms += ctx.time.delta().as_secs_f32() * 1000.0;
-            while self.elapsed_ms >= FRAME_TIME {
+            let elapsed_ms = ctx.time.delta().as_secs_f32() * 1000.0;
+            for _ in 0..self.timer_freq.update(elapsed_ms) {
                 self.chip8.dec_delay_timer();
                 self.chip8.dec_sound_timer();
-                self.elapsed_ms -= FRAME_TIME;
             }
         } else {
             self.is_first_frame = false;

@@ -5,6 +5,7 @@ use ggez::conf::WindowMode;
 use ggez::{conf::WindowSetup, *};
 use std::fs::File;
 use std::io::Read;
+mod freq_timer;
 mod state;
 
 #[derive(Parser, Debug)]
